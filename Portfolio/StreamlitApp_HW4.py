@@ -22,15 +22,23 @@ import importlib
 # ── Setup ──────────────────────────────────────────────────────────────────────
 warnings.simplefilter("ignore")
 
-# Path setup matches Cell 7 of the template exactly:
-#   module_path = '/home/ec2-user/SageMaker'
-current_dir  = os.path.dirname(os.path.abspath(__file__))
-project_root = '/home/ec2-user/SageMaker'
-if project_root not in sys.path:
-    sys.path.append(project_root)
+# FIX: On Streamlit Cloud the app runs from:
+#   /mount/src/stock_prediction/Portfolio/StreamlitApp_HW4.py
+# The src/ folder lives one level up at:
+#   /mount/src/stock_prediction/src/
+# So we must add the PARENT of the Portfolio/ folder to sys.path dynamically.
+# This also works on SageMaker where the structure is:
+#   /home/ec2-user/SageMaker/HW 4/StreamlitApp_HW4.py
+#   /home/ec2-user/SageMaker/src/
+current_dir  = os.path.dirname(os.path.abspath(__file__))   # .../Portfolio/
+project_root = os.path.abspath(os.path.join(current_dir, '..'))  # one level up
 
-# Matches Cell 8 of the template exactly
-# (extract_features_pair removed — confirmed not in feature_utils.py)
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+# FIX: Import PairFeatureEngineer directly — it is needed by the loaded pipeline
+# at inference time (it is step 0 inside the saved .joblib file).
+# extract_features_pair is NOT imported — confirmed absent from feature_utils.py.
 import src.Custom_Classes
 import src.feature_utils
 importlib.reload(src.Custom_Classes)

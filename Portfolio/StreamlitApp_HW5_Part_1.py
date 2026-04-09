@@ -14,7 +14,7 @@ import boto3
 import sagemaker
 from sagemaker.predictor import Predictor
 from sagemaker.serializers import JSONSerializer 
-from sagemaker.deserializers import NumpyDeserializer
+from sagemaker.deserializers import JSONDeserializer
 
 from sklearn.pipeline import Pipeline
 import shap
@@ -97,11 +97,11 @@ def call_model_api(input_df):
         endpoint_name=MODEL_INFO["endpoint"],
         sagemaker_session=sm_session,
         serializer=JSONSerializer(), 
-        deserializer=NumpyDeserializer() 
+        deserializer=JSONDeserializer()
     )
     try:
         raw_pred = predictor.predict(input_df)
-        pred_val = pd.DataFrame(raw_pred).values[-1][0]
+        pred_val = raw_pred["predictions"][0]
         return round(float(pred_val), 4), 200
     except Exception as e:
         return f"Error: {str(e)}", 500

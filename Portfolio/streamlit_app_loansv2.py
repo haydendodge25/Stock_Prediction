@@ -122,16 +122,14 @@ with col1:
         with st.spinner("Querying SageMaker endpoint..."):
             try:
                 client = get_sagemaker_client()
-                body = ",".join(map(str, feature_vector.flatten().tolist()))
+                body = json.dumps(dict(zip(FEATURE_NAMES, feature_vector.flatten().tolist())))
                 response = client.invoke_endpoint(
                     EndpointName=st.secrets["aws_credentials"]["AWS_ENDPOINT"],
-                    ContentType="text/csv",
+                    ContentType="application/json",
                     Body=body,
                 )
-                result = response['Body'].read().decode('utf-8').strip()
-                # handle both plain float "0.23" and json array "[0.23]"
-                result = result.strip("[]").split(",")[0]
-                prob = float(result)
+                result = json.loads(response['Body'].read().decode('utf-8'))
+                prob = float(result['default_probability'][0])
             except Exception as e:
                 st.error(f"Endpoint error: {e}")
                 prob = None
